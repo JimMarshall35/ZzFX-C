@@ -1,0 +1,262 @@
+#include "openAL.h"
+
+#include "AL/al.h"
+#include "AL/alc.h"
+#include "AL/alext.h"
+
+#include "ObjectPool.h"
+#include "ZzFX.h"
+#include <stdio.h>
+#include <string.h>
+#include "assert.h"
+
+#ifndef ZeroMemory
+#define ZeroMemory(dest, numBytes) memset(dest, 0, numBytes)
+#endif
+
+
+#define NULL_HANDLE -1
+
+typedef int HSFXBuffer;
+
+struct SFXBuffer
+{
+    /// @brief Length in samples
+    float lengthSamples;
+
+    /// @brief OpenAL buffer handle
+    ALuint hALBuffer;
+
+    /// @brief the time left to play for the sound effect
+    float timeLeft;
+
+    HSFXBuffer hThis;
+
+    /// @brief next in the list, when the buffer has finished playing and can be reused
+    HSFXBuffer hNext;
+
+    /// @brief prev in the list, when the buffer has finished playing and can be reused
+    HSFXBuffer hPrev;
+
+};
+
+static ALCint gDevRate = 0;
+static ALuint gSFXSource = -1;
+static HSFXBuffer gPlayingBuffersListHead = -1;
+static int gPlayingBuffersListLen = 0;
+static OBJECT_POOL(struct SFXBuffer) gBuffersPool = NULL;
+float* gSfxBuffer = NULL;
+size_t gSfxBufferSize = 0;
+float gMasterVolume = 0.2;
+
+static void InsertBufferIntoPlayingList(HSFXBuffer hBuf)
+{
+    gPlayingBuffersListLen++;
+    if(gPlayingBuffersListHead == NULL_HANDLE)
+    {
+        gPlayingBuffersListHead = hBuf;
+        return;
+    }
+
+    gBuffersPool[hBuf].hNext = gPlayingBuffersListHead;
+    gBuffersPool[gPlayingBuffersListHead].hPrev = hBuf;
+    gPlayingBuffersListHead = hBuf;
+}
+
+static void RemoveBufferFromPlayingList(HSFXBuffer hBuf)
+{
+    gPlayingBuffersListLen--;
+
+    HSFXBuffer hNext = gBuffersPool[hBuf].hNext;
+    HSFXBuffer hPrev = gBuffersPool[hBuf].hPrev;
+
+    if(hNext != NULL_HANDLE)
+    {
+        gBuffersPool[hNext].hPrev = hPrev;
+    }
+    
+    if(hPrev != NULL_HANDLE)
+    {
+        gBuffersPool[hPrev].hNext = hNext;
+    }
+    
+    if(gPlayingBuffersListHead == hBuf)
+    {
+        gPlayingBuffersListHead = hNext;
+    }
+}
+
+static HSFXBuffer FindReusableBuffer()
+{
+    HSFXBuffer hBuf = NULL_HANDLE;
+
+    hBuf == gPlayingBuffersListHead;
+    while(hBuf != NULL_HANDLE)
+    {
+        if(gBuffersPool[hBuf].timeLeft <= 0)
+        {
+            return hBuf;
+        }
+        hBuf = gBuffersPool[hBuf].hNext;
+    }
+    return NULL_HANDLE;
+}
+
+static HSFXBuffer AquireSFXBuffer()
+{
+    HSFXBuffer hR = FindReusableBuffer();
+    if(hR != NULL_HANDLE)
+    {
+        RemoveBufferFromPlayingList(hR);
+        gBuffersPool[hR].timeLeft = 0;
+        gBuffersPool[hR].lengthSamples = 0;
+    }
+    else
+    {
+        gBuffersPool = GetObjectPoolIndex(gBuffersPool, &hR);
+        gBuffersPool[hR].hALBuffer = NULL_HANDLE;
+        gBuffersPool[hR].hNext = NULL_HANDLE;
+        gBuffersPool[hR].hPrev = NULL_HANDLE;
+        gBuffersPool[hR].hThis = hR;
+        gBuffersPool[hR].lengthSamples = 0;
+        alGenBuffers(1, &gBuffersPool[hR].hALBuffer);
+    }
+    return hR;
+}
+
+static void AllocateWorkingSampleBuffer()
+{
+    const float sfxBufferLenSeconds = 4;
+    gSfxBufferSize = sizeof(float) * sfxBufferLenSeconds * gDevRate;
+    gSfxBuffer = malloc(gSfxBufferSize); 
+    ZeroMemory(gSfxBuffer, gSfxBufferSize);
+}
+
+
+float zzfx(struct ZZFXSound* pSound)
+{
+    float v = pSound->volume;
+    pSound->volume *= gMasterVolume;
+    int samples = zzfx_Generate(gSfxBuffer, gSfxBufferSize / sizeof(float), (float)gDevRate, pSound);
+    printf("zzfx_Generate %i samples\n", samples);
+    pSound->volume = v;
+    HSFXBuffer hBuf = AquireSFXBuffer();
+    printf("acquired buffer %i\n", hBuf);
+    gBuffersPool[hBuf].timeLeft = (float)samples / (float)gDevRate;
+    alBufferData(gBuffersPool[hBuf].hALBuffer, AL_FORMAT_MONO_FLOAT32, gSfxBuffer, (ALsizei)samples * sizeof(float), (ALsizei)gDevRate);
+    alSourcei(gSFXSource, AL_BUFFER, (ALint)gBuffersPool[hBuf].hALBuffer);
+    ALfloat source_x = 0.0f;
+    ALfloat source_y = 0.0f;
+    ALfloat source_z = 0.0f;
+    alSource3f(gSFXSource, AL_POSITION, source_x, source_y, source_z);
+
+    assert(alGetError()==AL_NO_ERROR && "Failed to setup sound source");
+    alSourcePlay(gSFXSource);
+    InsertBufferIntoPlayingList(hBuf);
+    return (float)samples / (float)gDevRate;
+}
+
+int zzfx_InitBackend()
+{
+
+    const ALCchar *name;
+    ALCdevice *device;
+    ALCcontext *ctx;
+    
+    device = alcOpenDevice(NULL);
+    if(!device)
+    {
+        printf("Could not open an OpenAL device!");
+        return 1;
+    }
+
+    alcGetIntegerv(device, ALC_FREQUENCY, 1, &gDevRate);
+    printf("audio device sample rate: %i", gDevRate);
+
+    ctx = alcCreateContext(device, NULL);
+    if(ctx == NULL || alcMakeContextCurrent(ctx) == ALC_FALSE)
+    {
+        if(ctx != NULL)
+            alcDestroyContext(ctx);
+        alcCloseDevice(device);
+        printf("Could not set an OpenAL context!");
+        return 1;
+    }
+
+    name = NULL;
+    if(alcIsExtensionPresent(device, "ALC_ENUMERATE_ALL_EXT"))
+        name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
+    if(!name || alcGetError(device) != AL_NO_ERROR)
+        name = alcGetString(device, ALC_DEVICE_SPECIFIER);
+    printf("OpenAL: Opened \"%s\"\n", name);
+
+    gBuffersPool = NEW_OBJECT_POOL(struct SFXBuffer, 64);
+    alGenSources(1, &gSFXSource);
+    gPlayingBuffersListHead = NULL_HANDLE;
+    gPlayingBuffersListLen = 0;
+    AllocateWorkingSampleBuffer();
+    return 0;
+}
+
+void zzfx_ShutdownBackend()
+{
+    ALCdevice *device;
+    ALCcontext *ctx;
+
+    ctx = alcGetCurrentContext();
+    if(ctx == NULL)
+        return;
+
+    device = alcGetContextsDevice(ctx);
+
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(ctx);
+    alcCloseDevice(device);
+}
+
+void zzfx_SetMasterVolume(float v)
+{
+    gMasterVolume = v;
+}
+
+float zzfx_GetMasterVolume()
+{
+    return gMasterVolume;
+}
+
+void zzfx_Update(float deltaT)
+{
+    HSFXBuffer hBuf = NULL_HANDLE;
+
+    hBuf = gPlayingBuffersListHead;
+    while(hBuf != NULL_HANDLE)
+    {
+        if(gBuffersPool[hBuf].timeLeft > 0.0f)
+            gBuffersPool[hBuf].timeLeft -= deltaT;
+        hBuf = gBuffersPool[hBuf].hNext;
+    }
+}
+
+bool zzfx_IsSoundPlaying()
+{
+    HSFXBuffer hBuf = NULL_HANDLE;
+    bool bAnyTimeLeft = false;
+    if(gPlayingBuffersListLen == 0)
+    {
+        return false;
+    }
+
+    hBuf = gPlayingBuffersListHead;
+    while(hBuf != NULL_HANDLE)
+    {
+        if(gBuffersPool[hBuf].timeLeft > 0.0f)
+        {
+            bAnyTimeLeft = true;
+            break;
+        }
+            
+        hBuf = gBuffersPool[hBuf].hNext;
+    }
+    return bAnyTimeLeft;
+}
+
