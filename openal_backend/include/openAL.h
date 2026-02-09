@@ -14,10 +14,57 @@ extern "C" {
 
 struct ZZFXSound;
 
+/// @brief play a sound - version with individual params to match the original API
+/// @param volume 
+/// @param randomness 
+/// @param frequency 
+/// @param attack 
+/// @param sustain 
+/// @param release 
+/// @param shape 
+/// @param shapeCurve 
+/// @param slide 
+/// @param deltaSlide 
+/// @param pitchJump 
+/// @param pitchJumpTime 
+/// @param repeatTime 
+/// @param noise 
+/// @param modulation 
+/// @param bitCrush 
+/// @param delay 
+/// @param sustainVolume 
+/// @param decay 
+/// @param tremolo 
+/// @param filter 
+/// @return 
+float zzfx(
+    float volume,
+    float randomness,
+    float frequency,
+    float attack,
+    float sustain,
+    float release,
+    float shape,
+    float shapeCurve,
+    float slide,
+    float deltaSlide,
+    float pitchJump,
+    float pitchJumpTime,
+    float repeatTime,
+    float noise,
+    float modulation,
+    float bitCrush,
+    float delay,
+    float sustainVolume,
+    float decay,
+    float tremolo,
+    float filter
+);
+
 /// @brief play a sound immediately
-/// @param pSound 
+/// @param pSound the sound struct
 /// @return length of sound playing in seconds
-float zzfx(struct ZZFXSound* pSound);
+float zzfx_struct(struct ZZFXSound* pSound);
 
 /// @brief initialize the backend - call this once before zzfx
 int zzfx_InitBackend();

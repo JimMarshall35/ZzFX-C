@@ -132,16 +132,64 @@ static void AllocateWorkingSampleBuffer()
     ZeroMemory(gSfxBuffer, gSfxBufferSize);
 }
 
+float zzfx(
+    float volume,
+    float randomness,
+    float frequency,
+    float attack,
+    float sustain,
+    float release,
+    float shape,
+    float shapeCurve,
+    float slide,
+    float deltaSlide,
+    float pitchJump,
+    float pitchJumpTime,
+    float repeatTime,
+    float noise,
+    float modulation,
+    float bitCrush,
+    float delay,
+    float sustainVolume,
+    float decay,
+    float tremolo,
+    float filter
+)
+{
+    struct ZZFXSound sfx = {
+        volume,
+        randomness,
+        frequency,
+        attack,
+        sustain,
+        release,
+        shape,
+        shapeCurve,
+        slide,
+        deltaSlide,
+        pitchJump,
+        pitchJumpTime,
+        repeatTime,
+        noise,
+        modulation,
+        bitCrush,
+        delay,
+        sustainVolume,
+        decay,
+        tremolo,
+        filter
+    };
+    return zzfx_struct(&sfx);
+}
 
-float zzfx(struct ZZFXSound* pSound)
+
+float zzfx_struct(struct ZZFXSound* pSound)
 {
     float v = pSound->volume;
     pSound->volume *= gMasterVolume;
     int samples = zzfx_Generate(gSfxBuffer, gSfxBufferSize / sizeof(float), (float)gDevRate, pSound);
-    printf("zzfx_Generate %i samples\n", samples);
     pSound->volume = v;
     HSFXBuffer hBuf = AquireSFXBuffer();
-    printf("acquired buffer %i\n", hBuf);
     gBuffersPool[hBuf].timeLeft = (float)samples / (float)gDevRate;
     alBufferData(gBuffersPool[hBuf].hALBuffer, AL_FORMAT_MONO_FLOAT32, gSfxBuffer, (ALsizei)samples * sizeof(float), (ALsizei)gDevRate);
     alSourcei(gSFXSource, AL_BUFFER, (ALint)gBuffersPool[hBuf].hALBuffer);
@@ -153,7 +201,8 @@ float zzfx(struct ZZFXSound* pSound)
     assert(alGetError()==AL_NO_ERROR && "Failed to setup sound source");
     alSourcePlay(gSFXSource);
     InsertBufferIntoPlayingList(hBuf);
-    return (float)samples / (float)gDevRate;
+    float seconds = (float)samples / (float)gDevRate;
+    return seconds;
 }
 
 int zzfx_InitBackend()

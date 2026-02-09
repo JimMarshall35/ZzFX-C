@@ -4,6 +4,7 @@
 #include <math.h>
 #include <float.h>
 #include <immintrin.h>
+#include <string.h>
 
 #define PI 3.14159265358979323846
 #define PI2 (2.0 * PI)
@@ -272,14 +273,8 @@ int zzfx_Generate(float* buffer, int bufferSize, float sampleRate, struct ZZFXSo
                     {
                         // 2: saw
                         //s = 1 - (2 * t / PI2 % 2 + 2) % 2;
-                        s = 1.0f - fmodf(2.0f * t / PI2 + 2.0f, 2.0f); // saw
-                        float phase = t / PI2;
-                        float doubled = 2 * phase;
-                        float wrapped = fmodf(doubled, 2.0f);
-                        float shifted = wrapped + 2;
-                        float normalized = fmodf(shifted, 2);
-
-                        s = 1 - normalized;
+                        s = 1.0f - fmodf(fmodf(2.0f * t / PI2, 2.0f) + 2.0f, 2.0); // saw
+                        
 
                     }
                 } 
@@ -336,19 +331,19 @@ int zzfx_Generate(float* buffer, int bufferSize, float sampleRate, struct ZZFXSo
             if (delay > 0)
             {
                 
-                // int dIndex = i - (int)delay;
-                // if (dIndex >= 0)
-                // {
-                //     s = s / 2.0f + buffer[dIndex] / 2.0f;
-                // }
-                // else
-                // {
-                //     s = s / 2.0f;
-                // }
+                int dIndex = i - (int)delay;
+                if (dIndex >= 0)
+                {
+                    s = s / 2.0f + buffer[dIndex] / 2.0f;
+                }
+                else
+                {
+                    s = s / 2.0f;
+                }
             }
-            s = delay ? s/2.0f + (delay > i ? 0 : 
-                    (i < length - delay ? 1 : (length-1) / delay) * 
-                    (buffer[i-(int)delay] / 2.0) / sfx->volume) : s;
+            // s = delay ? s/2.0f + (delay > i ? 0 : 
+            //         (i < length - delay ? 1 : (length-1) / delay) * 
+            //         (buffer[i-(int)delay] / 2.0) / sfx->volume) : s;
 
             // filter
             if (sfx->filter != 0)
