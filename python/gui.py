@@ -1,12 +1,39 @@
 import tkinter as tk
+from tkinter import ttk
+
 import zzfx
 
 BACKEND_TICK_MS = 100
 BACKEND_TICK_S = 0.1
 
+WAVEFORM_NAME_LUT = {
+    "sine" : 0,
+    "triangle" : 1,
+    "saw" : 2,
+    "tan" : 3,
+    "noise" : 4,
+    "square" : 5
+}
+
+def add_param_row_standard(frame, onRow, paramsObject, paramInfo):
+    l = tk.Label(frame, text=paramInfo["nicename"])
+    l.grid(column=0, row=onRow)
+    e = tk.Entry(frame, textvariable=paramInfo["var"])
+    e.grid(column=1, row=onRow)
+
+def add_param_row_wave_combi(frame, onRow, paramsObject, paramInfo):
+    l = tk.Label(frame, text=paramInfo["nicename"])
+    l.grid(column=0, row=onRow)
+    c = ttk.Combobox(frame, textvariable=paramInfo["var"])
+    c['values'] = list(WAVEFORM_NAME_LUT.keys())
+    c.grid(column=1, row=onRow)
 
 
 class SynthParams:
+    def call_zzfx(self):
+        call_args = [self.params[x]["get_float_val"](self.params[x]) for x in self.call_order]
+        zzfx.zzfx(*call_args)
+
     def set_default_values(self, params):
         for p in params:
             if p == "volume":
@@ -22,7 +49,7 @@ class SynthParams:
             elif p == "release":
                 self.params["release"]["var"].set(0.1)
             elif p == "shape":
-                self.params["shape"]["var"].set(0.1)
+                self.params["shape"]["var"].set("sine")
             elif p == "shapeCurve":
                 self.params["shapeCurve"]["var"].set(1)
             elif p == "slide":
@@ -60,7 +87,9 @@ class SynthParams:
                 "min" : -1e9,
                 "max" : 1e9,
                 "nicename" : "Volume",
-                "help" : "Volume scale (percent)"
+                "help" : "Volume scale (percent)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "randomness": { 
                 "var" : tk.DoubleVar(),
@@ -68,7 +97,9 @@ class SynthParams:
                 "min" : -1e9,
                 "max" : 1e9,
                 "nicename" : "Randomness",
-                "help" : "How much to randomize frequency (percent Hz)"
+                "help" : "How much to randomize frequency (percent Hz)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "frequency": { 
                 "var" : tk.DoubleVar(),
@@ -76,153 +107,212 @@ class SynthParams:
                 "min" : -1e9,
                 "max" : 1e9,
                 "nicename" : "Frequency",
-                "help" : "Frequency of sound (Hz)"
+                "help" : "Frequency of sound (Hz)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "attack": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Attack",
+                "help" : "Attack time, how fast sound starts (seconds)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "sustain": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Sustain",
+                "help" : "Sustain time, how long sound holds (seconds)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "release": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Release",
+                "help" : "Release time, how fast sound fades out (seconds)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "shape": { 
-                "var" : tk.IntVar(),
+                "var" : tk.StringVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Wave Shape",
+                "help" : "Shape of the sound wave",
+                "add_row_widgets" : add_param_row_wave_combi,
+                "get_float_val" : lambda p : WAVEFORM_NAME_LUT[p["var"].get()]
             },
             "shapeCurve": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Shape Curve",
+                "help" : "Squarenes of wave (0=square, 1=normal, 2=pointy), for square waves 0-2 is duty cycle",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "slide": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Slide",
+                "help" : "How much to slide frequency (kHz/s)'",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "deltaSlide": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Delta Slide",
+                "help" : "How much to change slide (kHz/s/s)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "pitchJump": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Pitch Jump",
+                "help" : "Frequency of pitch jump (Hz)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "pitchJumpTime": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Pitch Jump Time",
+                "help" : "Time of pitch jump (seconds)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "repeatTime": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Repeat Time",
+                "help" : "Resets some parameters periodically (seconds)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "noise": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Noise",
+                "help" : "How much random noise to add (percent)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "modulation": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Modulation",
+                "help" : "Frequency of modulation wave, negative flips phase (Hz)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "bitCrush": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Bit Crush",
+                "help" : "Resamples at a lower frequency in (samples*100)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "delay": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Delay",
+                "help" : "Overlap sound with itself for reverb and flanger effects (seconds)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "sustainVolume": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Sustain Volume",
+                "help" : "Volume level for sustain (percent)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "decay": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Decay",
+                "help" : "Decay time, how long to reach sustain after attack (seconds)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "tremolo": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Tremolo",
+                "help" : "Trembling effect, rate controlled by repeat time (precent)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             },
             "filter": { 
                 "var" : tk.DoubleVar(),
                 "step" : 0.1,
                 "min" : -1e9,
                 "max" : 1e9,
-                "nicename" : "",
-                "help" : ""
+                "nicename" : "Filter",
+                "help" : "Filter cutoff frequency, positive for HPF, negative for LPF (Hz)",
+                "add_row_widgets" : add_param_row_standard,
+                "get_float_val" : lambda p : p["var"].get()
             }
         }
+        self.call_order = ["volume",
+                "randomness",
+                "frequency",
+                "attack",
+                "sustain",
+                "release",
+                "shape",
+                "shapeCurve",
+                "slide",
+                "deltaSlide",
+                "pitchJump",
+                "pitchJumpTime",
+                "repeatTime",
+                "noise",
+                "modulation",
+                "bitCrush",
+                "delay",
+                "sustainVolume",
+                "decay",
+                "tremolo",
+                "filter"]
         self.set_default_values(self.params.keys())
 
 
@@ -234,16 +324,19 @@ def update_zzfx_backend():
     zzfx.zzfx_Update(BACKEND_TICK_S)
     root.after(BACKEND_TICK_MS, update_zzfx_backend)
 
-def add_entry_rows(frame):
+def add_parameter_rows(frame):
     onRow = 0
     for key in params.params.keys():
         val = params.params[key]
-        l = tk.Label(frame, text=key)
-        l.grid(column=0, row=onRow)
-        e = tk.Entry(frame, textvariable=val["var"])
-        e.grid(column=1, row=onRow)
+        val["add_row_widgets"](frame, onRow, params, val)
         onRow += 1
-    pass
+
+def play_sfx():
+    params.call_zzfx()
+
+def add_right_pane(frame):
+    play_btn = tk.Button(frame, text="Play", command=play_sfx)
+    play_btn.grid(column=0, row=0)
 
 def main():
     global root, params
@@ -256,9 +349,13 @@ def main():
     params = SynthParams()
 
     # setup widgets
-    text_entries_frame = tk.Frame(root)
-    text_entries_frame.grid(row=0, column=0)
-    add_entry_rows(text_entries_frame)
+    left_hand_pane = tk.Frame(root)
+    left_hand_pane.grid(row=0, column=0)
+    add_parameter_rows(left_hand_pane)
+
+    right_hand_pane = tk.Frame(root)
+    right_hand_pane.grid(row=0, column=1)
+    add_right_pane(right_hand_pane)
 
     root.mainloop()
     zzfx.zzfx_ShutdownBackend()
