@@ -8,6 +8,7 @@
 #include "ZzFX.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "assert.h"
 
 #ifndef ZeroMemory
@@ -23,6 +24,9 @@ struct SFXBuffer
 {
     /// @brief Length in samples
     float lengthSamples;
+
+    /// @brief OpenAL source handle
+    ALuint hALSource;
 
     /// @brief OpenAL buffer handle
     ALuint hALBuffer;
@@ -90,7 +94,7 @@ static HSFXBuffer FindReusableBuffer()
 {
     HSFXBuffer hBuf = NULL_HANDLE;
 
-    hBuf == gPlayingBuffersListHead;
+    hBuf = gPlayingBuffersListHead;
     while(hBuf != NULL_HANDLE)
     {
         if(gBuffersPool[hBuf].timeLeft <= 0)
@@ -107,6 +111,7 @@ static HSFXBuffer AquireSFXBuffer()
     HSFXBuffer hR = FindReusableBuffer();
     if(hR != NULL_HANDLE)
     {
+        printf("reusing buffer\n");
         RemoveBufferFromPlayingList(hR);
         gBuffersPool[hR].timeLeft = 0;
         gBuffersPool[hR].lengthSamples = 0;
@@ -115,11 +120,17 @@ static HSFXBuffer AquireSFXBuffer()
     {
         gBuffersPool = GetObjectPoolIndex(gBuffersPool, &hR);
         gBuffersPool[hR].hALBuffer = NULL_HANDLE;
+        gBuffersPool[hR].hALSource = NULL_HANDLE;
         gBuffersPool[hR].hNext = NULL_HANDLE;
         gBuffersPool[hR].hPrev = NULL_HANDLE;
         gBuffersPool[hR].hThis = hR;
         gBuffersPool[hR].lengthSamples = 0;
-        alGenBuffers(1, &gBuffersPool[hR].hALBuffer);
+        alGenSources(1, &gBuffersPool[hR].hALSource);
+        
+        ALfloat source_x = 0.0f;
+        ALfloat source_y = 0.0f;
+        ALfloat source_z = 0.0f;
+        alSource3f(gBuffersPool[hR].hALSource, AL_POSITION, source_x, source_y, source_z);
     }
     return hR;
 }
@@ -190,16 +201,22 @@ float zzfx_struct(struct ZZFXSound* pSound)
     int samples = zzfx_Generate(gSfxBuffer, gSfxBufferSize / sizeof(float), (float)gDevRate, pSound);
     pSound->volume = v;
     HSFXBuffer hBuf = AquireSFXBuffer();
+    printf("Acquired buffer %i\n", hBuf);
     gBuffersPool[hBuf].timeLeft = (float)samples / (float)gDevRate;
+    gBuffersPool[hBuf].hNext = NULL_HANDLE;
+    gBuffersPool[hBuf].hPrev = NULL_HANDLE;
+    alSourceStop(gBuffersPool[hBuf].hALSource);
+    printf("Timeleft: %.3f\n", gBuffersPool[hBuf].timeLeft);
+    if(gBuffersPool[hBuf].hALBuffer != NULL_HANDLE)
+    {
+        alDeleteBuffers(1, &gBuffersPool[hBuf].hALBuffer);
+    }
+    alGenBuffers(1, &gBuffersPool[hBuf].hALBuffer);
     alBufferData(gBuffersPool[hBuf].hALBuffer, AL_FORMAT_MONO_FLOAT32, gSfxBuffer, (ALsizei)samples * sizeof(float), (ALsizei)gDevRate);
-    alSourcei(gSFXSource, AL_BUFFER, (ALint)gBuffersPool[hBuf].hALBuffer);
-    ALfloat source_x = 0.0f;
-    ALfloat source_y = 0.0f;
-    ALfloat source_z = 0.0f;
-    alSource3f(gSFXSource, AL_POSITION, source_x, source_y, source_z);
-
-    assert(alGetError()==AL_NO_ERROR && "Failed to setup sound source");
-    alSourcePlay(gSFXSource);
+    alSourcei(gBuffersPool[hBuf].hALSource, AL_BUFFER, (ALint)gBuffersPool[hBuf].hALBuffer);
+    
+    //assert(alGetError()==AL_NO_ERROR && "Failed to setup sound source");
+    alSourcePlay(gBuffersPool[hBuf].hALSource);
     InsertBufferIntoPlayingList(hBuf);
     float seconds = (float)samples / (float)gDevRate;
     return seconds;
@@ -240,7 +257,6 @@ int zzfx_InitBackend()
     printf("OpenAL: Opened \"%s\"\n", name);
 
     gBuffersPool = NEW_OBJECT_POOL(struct SFXBuffer, 64);
-    alGenSources(1, &gSFXSource);
     gPlayingBuffersListHead = NULL_HANDLE;
     gPlayingBuffersListLen = 0;
     AllocateWorkingSampleBuffer();

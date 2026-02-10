@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import zzfx
+import random
 
 BACKEND_TICK_MS = 100
 BACKEND_TICK_S = 0.1
@@ -34,6 +35,174 @@ class SynthParams:
         call_args = [self.params[x]["get_float_val"](self.params[x]) for x in self.call_order]
         zzfx.zzfx(*call_args)
 
+    def random_explosion(self):
+        self.params["frequency"]["var"].set(random.uniform(30, 99))
+        keys_list = list(WAVEFORM_NAME_LUT.keys())
+        i = int(random.uniform(0, len(keys_list)))
+        self.params["shape"]["var"].set(keys_list[i])
+        self.params["attack"]["var"].set(random.uniform(0.0, 0.1))
+        self.params["decay"]["var"].set(random.uniform(0.05, 0.2))
+        self.params["sustain"]["var"].set(random.uniform(0.0, 0.3))
+        self.params["sustainVolume"]["var"].set(random.uniform(0.3, 0.5))
+        self.params["release"]["var"].set(random.uniform(0.2, 0.6))
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["slide"]["var"].set(0.0)
+        else:
+            self.params["slide"]["var"].set(random.uniform(-9,9))
+        pass
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["deltaSlide"]["var"].set(0.0)
+        else:
+            self.params["deltaSlide"]["var"].set(random.uniform(-9,9))
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["delay"]["var"].set(0.0)
+        else:
+            self.params["delay"]["var"].set(random.uniform(0, 0.5))
+
+        self.params["noise"]["var"].set(random.uniform(0.0, 2.0))
+
+        if random.uniform(0, 1) < 0.8:
+            self.params["modulation"]["var"].set(0.0)
+        else:
+            self.params["modulation"]["var"].set(random.uniform(0, 1.0) ** 2 * 99)
+
+        self.params["bitCrush"]["var"].set(random.uniform(0.1, 1.0))
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["tremolo"]["var"].set(0.0)
+        else:
+            self.params["tremolo"]["var"].set(random.uniform(0,0.5))
+
+        if random.uniform(0, 1) < 0.5 or self.params["tremolo"]["var"].get() != 0:
+            self.params["repeatTime"]["var"].set(random.uniform(0.05,0.3))
+
+        filter = 0
+        if random.random() < 0.5:
+            filter = 0
+        else:
+            if random.random() < 0.5:
+                filter = 99 + random.random() ** 2 * 2e3
+            else:
+                filter = random.random() ** 2 * 2e3 - 3500
+
+        self.params["filter"]["var"].set(filter)
+
+    def random_powerup(self):
+        self.params["frequency"]["var"].set(random.uniform(99, 700))
+        if random.uniform(0,1) < 0.2 :
+            self.params["shape"]["var"].set("square")
+        else:
+            if random.uniform(0,1) < 0.5:
+                self.params["shape"]["var"].set("sine")
+            else:
+                self.params["shape"]["var"].set("triangle")
+        self.params["attack"]["var"].set(random.uniform(0.0, 0.1))
+        self.params["decay"]["var"].set(random.uniform(0.1, 0.3))
+        self.params["sustain"]["var"].set(random.uniform(0.1, 0.3))
+        self.params["sustainVolume"]["var"].set(random.uniform(0.5, 1.0))
+        self.params["release"]["var"].set(random.uniform(0.05, 0.4))
+        if random.uniform(0, 1) < 0.8:
+            self.params["delay"]["var"].set(0)
+        else:
+            self.params["delay"] = 0.2
+        self.params["repeatTime"]["var"].set(random.uniform(0.02, 0.2))
+        if random.uniform(0, 1) < 0.5:
+            self.params["slide"]["var"].set(0.0)
+        else:
+            self.params["slide"]["var"].set(random.uniform(-1,1)**3*20)
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["deltaSlide"]["var"].set(0.0)
+        else:
+            self.params["deltaSlide"]["var"].set(random.uniform(-1,1)**3*400)
+
+        if random.uniform(0, 1) < 0.8:
+            self.params["noise"]["var"].set(0.0)
+        else:
+            self.params["noise"]["var"].set(random.uniform(0, 0.5))
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["bitCrush"]["var"].set(0.0)
+        else:
+            self.params["bitCrush"]["var"].set(random.uniform(0, 0.2))
+        
+        if random.uniform(0, 1) < 0.5:
+            self.params["tremolo"]["var"].set(0.0)
+        else:
+            self.params["tremolo"]["var"].set(random.uniform(0, 0.5))
+
+        if random.uniform(0, 1) < 0.8:
+            self.params["modulation"]["var"].set(0.0)
+        else:
+            self.params["modulation"]["var"].set(random.uniform(0, 1.0) ** 2 * 50)
+
+        if random.uniform(0, 1) < .5 or (self.params["tremolo"]["var"].get() != 0) and (self.params["slide"]["var"].get() != 0) and (self.params["deltaSlide"]["var"].get() != 0):
+            if random.uniform(0, 1) < 0.5:
+                self.params["pitchJump"]["var"].set(-random.uniform(50, 200))
+            else:
+                self.params["pitchJump"]["var"].set(random.uniform(50, 500))
+            if self.params["pitchJump"] == 0:
+                self.params["pitchJumpTime"]["var"].set(0)
+            else:
+                self.params["pitchJumpTime"]["var"].set(random.uniform(0.05, 0.2))
+    
+    def random_hit(self):
+        self.params["frequency"]["var"].set(random.uniform(30, 500))
+        keys_list = list(WAVEFORM_NAME_LUT.keys())
+        i = int(random.uniform(0, len(keys_list)))
+        self.params["shape"]["var"].set(keys_list[i])
+        self.params["attack"]["var"].set(random.uniform(0.0, 0.03))
+        self.params["decay"]["var"].set(random.uniform(0.0, 0.1))
+        self.params["sustain"]["var"].set(random.uniform(0.0, 0.1))
+        self.params["sustainVolume"]["var"].set(random.uniform(0.4, 1.0))
+        self.params["release"]["var"].set(random.uniform(0.0, 0.2))
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["delay"]["var"].set(0.0)
+        else:
+            self.params["delay"]["var"].set(random.uniform(0, 0.2))
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["slide"]["var"].set(0.0)
+        else:
+            self.params["slide"]["var"].set(random.uniform(-1,1) ** 3 * 10)
+
+        if random.uniform(0, 1) < 0.5:
+            self.params["deltaSlide"]["var"].set(0.0)
+        else:
+            self.params["deltaSlide"]["var"].set(random.uniform(-1,1) ** 3 * 20)
+
+        self.params["noise"]["var"].set(random.uniform(0.0, 2.0))
+
+        if random.uniform(0, 1) < 0.8:
+            self.params["modulation"]["var"].set(0.0)
+        else:
+            self.params["modulation"]["var"].set(random.random() ** 2 * 50)
+
+        self.params["bitCrush"]["var"].set(random.uniform(0.0, 0.5))
+
+        if random.uniform(0, 1) < 0.6:
+            self.params["tremolo"]["var"].set(0.0)
+        else:
+            self.params["tremolo"]["var"].set(random.uniform(0,0.5))
+
+        if random.uniform(0, 1.0) < 0.5 or self.params["tremolo"]["var"].get() != 0:
+            self.params["repeatTime"]["var"].set(random.uniform(0.01,0.1))
+
+        filter = 0
+        if random.random() < 0.5:
+            filter = 0
+        else:
+            if random.random() < 0.5:
+                filter = 99 + random.random() ** 2 * 2e3
+            else:
+                filter = random.random() ** 2 * 2e3 - 3500
+
+        self.params["filter"]["var"].set(filter)
+            
     def set_default_values(self, params):
         for p in params:
             if p == "volume":
@@ -315,7 +484,6 @@ class SynthParams:
                 "filter"]
         self.set_default_values(self.params.keys())
 
-
 root = None
 
 params = None
@@ -334,9 +502,27 @@ def add_parameter_rows(frame):
 def play_sfx():
     params.call_zzfx()
 
+def explosion():
+    params.set_default_values(params.params.keys())
+    params.random_explosion()
+
+def powerup():
+    params.set_default_values(params.params.keys())
+    params.random_powerup()
+
+def hit():
+    params.set_default_values(params.params.keys())
+    params.random_hit()
+
 def add_right_pane(frame):
     play_btn = tk.Button(frame, text="Play", command=play_sfx)
     play_btn.grid(column=0, row=0)
+    powerup_btn = tk.Button(frame, text="Powerup", command=powerup)
+    powerup_btn.grid(column=0,row=1)
+    explosion_bt = tk.Button(frame, text="Explosion", command=explosion)
+    explosion_bt.grid(column=1, row=1)
+    explosion_bt = tk.Button(frame, text="Hit", command=explosion)
+    explosion_bt.grid(column=2, row=1)
 
 def main():
     global root, params
