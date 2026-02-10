@@ -107,7 +107,7 @@ class SynthParams:
         if random.uniform(0, 1) < 0.8:
             self.params["delay"]["var"].set(0)
         else:
-            self.params["delay"] = 0.2
+            self.params["delay"]["var"].set(0.2)
         self.params["repeatTime"]["var"].set(random.uniform(0.02, 0.2))
         if random.uniform(0, 1) < 0.5:
             self.params["slide"]["var"].set(0.0)
