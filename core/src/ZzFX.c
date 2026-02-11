@@ -4,7 +4,11 @@
 #include <math.h>
 #include <float.h>
 #include <immintrin.h>
+
 #include <string.h>
+#include "Math_Intrinsics.h"
+#define __MATH__INTRINSICS__IMPLEMENTATION__
+
 
 #define PI 3.14159265358979323846
 #define PI2 (2.0 * PI)
@@ -33,6 +37,13 @@ int SafeMod(int a, int b)
     return a % b;
 }
 
+__m256 mm256_tan_ps(__m256 val)
+{
+    __m256 cos, sin;
+    mm256_sincos_ps(val, &sin, &cos);
+    return _mm256_div_ps(sin, cos);
+}
+
 __m256 fmodf256(__m256 _x, __m256 _y)
 {
     //x - trunc(x / y) * y;
@@ -41,6 +52,17 @@ __m256 fmodf256(__m256 _x, __m256 _y)
     __m256 c = _mm256_mul_ps(trunc, _y);
     return _mm256_sub_ps(_x, c);
 }
+
+// https://github.com/MonoS/RGVS/blob/master/Repair.cpp
+__m256 mm256_abs_ps(__m256 x)
+{
+    __m256 Mask = _mm256_castsi256_ps(_mm256_set1_epi32(~0x80000000));
+
+    __m256 abs = _mm256_and_ps(Mask, x);
+
+    return abs;
+}
+
 
 int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZFXSound* inSfx) 
 {
@@ -100,6 +122,9 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
     float minS = FLT_MAX;
     float maxS = FLT_MIN;
     float bitcrush100 = (int)(sfx->bitCrush * 100);
+
+    __m256 _pi2 = _mm256_set1_ps(PI2);
+
     for (int i = 0; i < length; i += sizeof(__m256) / sizeof(float))
     {
         int crushVals[sizeof(__m256) / sizeof(float)];
@@ -115,7 +140,8 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
             t += f + f * sfx->noise * sinf(powf((float)i, 5.0f));
 
             // pitch jump
-            if (jump && (++jump > pitchJumpTime)) {
+            if (jump && (++jump > pitchJumpTime)) 
+            {
                 frequency += pitchJump;
                 startFrequency += pitchJump;
                 jump = 0;
@@ -133,7 +159,7 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
         }
         
         
-        __m256i lengthMask = _mm256_set_epi32(
+        __m256i _lengthMask = _mm256_set_epi32(
             (i     < length ? 0xffffffff : 0),
             (i + 1 < length ? 0xffffffff : 0),
             (i + 2 < length ? 0xffffffff : 0),
@@ -143,7 +169,7 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
             (i + 6 < length ? 0xffffffff : 0),
             (i + 7 < length ? 0xffffffff : 0));
 
-        __m256 modMask = _mm256_set_ps(
+        __m256 _modMask = _mm256_set_ps(
             (!modVals[0] ? 1.0f : 0),
             (!modVals[1] ? 1.0f : 0),
             (!modVals[2] ? 1.0f : 0),
@@ -153,24 +179,101 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
             (!modVals[6] ? 1.0f : 0),
             (!modVals[7] ? 1.0f : 0)); 
             
+        __m256 _t = _mm256_set_ps(
+            (!tVals[0] ? 1.0f : 0),
+            (!tVals[1] ? 1.0f : 0),
+            (!tVals[2] ? 1.0f : 0),
+            (!tVals[3] ? 1.0f : 0),
+            (!tVals[4] ? 1.0f : 0),
+            (!tVals[5] ? 1.0f : 0),
+            (!tVals[6] ? 1.0f : 0),
+            (!tVals[7] ? 1.0f : 0)
+        );
+        __m256 _samples = _mm256_set1_ps(0.0f);
         
-        __m256 samples;
+        
 
-        switch((int)sfx->shape)
+        // waveform generation
+        if (sfx->shape) 
         {
-        case 0:
-            break;
-        case 1:
-            break;
-        case 2:
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
+            if (sfx->shape > 1) 
+            {
+                if (sfx->shape > 2) 
+                {
+                    if (sfx->shape > 3) 
+                    {
+                        if (sfx->shape > 4) 
+                        {
+                            // 5: square (duty)
+                            __m256 _one = _mm256_set1_ps(1.0f);
+                            __m256 _minusOne = _mm256_set1_ps(-1.0f);
+                            __m256 _two = _mm256_set1_ps(2.0f);
+                            __m256 _tOverPI2 = _mm256_div_ps(_t, _pi2);
+                            __m256 _fmod = fmodf256(_tOverPI2, _one);
+                            __m256 _shapeCurveOver2 = _mm256_set1_ps(sfx->shapeCurve/2.0f);
+                            __m256 _ternaryMask = _mm256_cmp_ps(_fmod, _shapeCurveOver2, _CMP_LT_OS);
+                            __m256 _toAdd = _mm256_and_ps(_two, _ternaryMask); /* add two to the values where the fmod result was < shapeCurve / 2.0f to give values of either 1 or -1 */
+                            _samples = _mm256_add_ps(_minusOne, _toAdd);
+                            //s = fmodf(t/PI2,1.0f) < sfx->shapeCurve/2.0f ? 1.0f : -1.0f;
+                        } 
+                        else 
+                        {
+                            // 4: noise
+                            __m256 _t2 = _mm256_mul_ps(_t, _t);
+                            __m256 _t3 = _mm256_mul_ps(_t, _t);
+                            _samples = mm256_sin_ps(_t3);
+                            //s = sinf(t*t*t); // noise-like
+                        }
+                    } 
+                    else 
+                    {
+                        // 3: tan
+                        __m256 _one = _mm256_set1_ps(1.0f);
+                        __m256 _minusOne = _mm256_set1_ps(1.0f);
+                        __m256 _tan = mm256_tan_ps(_t);
+                        __m256 _min = _mm256_min_ps(_tan, _one);
+                        _samples = _mm256_max_ps(_min, _minusOne);
+                        //s = fmaxf(fminf(tanf(t),1.0f),-1.0f);
+                    }
+                } 
+                else 
+                {
+                    // 2: saw
+                    //s = 1 - (2 * t / PI2 % 2 + 2) % 2;
+                    __m256 _1 = _mm256_set1_ps(1.0f);
+                    __m256 _2 = _mm256_set1_ps(2.0f);
+                    __m256 _2t = _mm256_mul_ps(_2, _t);
+                    __m256 _2toverpi2 = _mm256_div_ps(_2t, _pi2);
+                    __m256 _fmod1 = fmodf256(_2toverpi2, _2);
+                    _fmod1 = _mm256_add_ps(_fmod1, _2);
+                    __m256 _fmod2 = fmodf256(_fmod1, _2);
+                    _samples = _mm256_sub_ps(_fmod2, _1);
+                    //s = 1.0f - fmodf(fmodf(2.0f * t / PI2, 2.0f) + 2.0f, 2.0); // saw
+                }
+            } 
+            else 
+            {
+                // 1: triangle
+                //s = 1.0f - 4.0f * fabsf(roundf(t/PI2) - t/PI2); // triangle
+                __m256 _1 = _mm256_set1_ps(1.0f);
+                __m256 _4 = _mm256_set1_ps(4.0f);
+                __m256 _tOverPI2 = _mm256_div_ps(_t, _pi2);
+                __m256 _r = _mm256_round_ps(_tOverPI2, _MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC);
+                _r = _mm256_sub_ps(_r, _tOverPI2);
+                __m256 _abs = mm256_abs_ps(_r);
+                _abs = _mm256_mul_ps(_abs, _4);
+                _samples = _mm256_sub_ps(_1, _abs); 
+            }
+        } 
+        else 
+        {
+            // 0: sine
+            //s = sinf(t);
+            _samples = mm256_sin_ps(_t);
         }
         
-        _mm256_maskstore_ps(buffer + i, lengthMask, samples);
+        
+        _mm256_maskstore_ps(buffer + i, _lengthMask, _samples);
     } 
 }
 
