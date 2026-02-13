@@ -6,8 +6,9 @@
 #include <immintrin.h>
 
 #include <string.h>
-#include "Math_Intrinsics.h"
+
 #define __MATH__INTRINSICS__IMPLEMENTATION__
+#include "Math_Intrinsics.h"
 
 
 #define PI 3.14159265358979323846
@@ -125,6 +126,8 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
 
     __m256 _pi2 = _mm256_set1_ps(PI2);
 
+    __m256 _samples = _mm256_set1_ps(0.0f);
+
     for (int i = 0; i < length; i += sizeof(__m256) / sizeof(float))
     {
         int crushVals[sizeof(__m256) / sizeof(float)];
@@ -189,7 +192,6 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
             (!tVals[6] ? 1.0f : 0),
             (!tVals[7] ? 1.0f : 0)
         );
-        __m256 _samples = _mm256_set1_ps(0.0f);
         
         
 
