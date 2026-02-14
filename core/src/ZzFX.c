@@ -455,7 +455,8 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
             }
         }
 
-        
+        __m256 _vol = _mm256_set1_ps(volume);
+        _samples = _mm256_mul_ps(_samples, _vol);
 
         _mm256_maskstore_ps(buffer + i, _lengthMask, _samples);
     } 
@@ -469,6 +470,7 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
 /// @return number of samples output
 int zzfx_Generate(float* buffer, int bufferSize, float sampleRate, struct ZZFXSound* inSfx) 
 {
+    //return zzfx_Generate_avx(buffer, bufferSize, sampleRate, inSfx);
     struct ZZFXSound cpy;
     memcpy(&cpy, inSfx, sizeof(struct ZZFXSound));
     struct ZZFXSound* sfx = &cpy;
