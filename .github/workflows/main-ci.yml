@@ -25,10 +25,7 @@ jobs:
     - name: anaylse simd
       run: |
         podman pull ghcr.io/jimmarshall35/simd-detective:main
-        podman run --rm --interactive --tty --volume ./core:/zzfx-core simd-detective:main
-        cd /zzfx-core
-        simd-detective -f ./src/*.c --list-operation --list-info --list-cpuid
-        exit
+        podman run --rm --volume ./core:/zzfx-core simd-detective:main simd-detective -f /zzfx-core/src/*.c --list-operation --list-info --list-cpuid
 
     - name: Build
       run: |
