@@ -14,6 +14,7 @@ mkdir -p ./$DEB_PKG_NAME/usr/lib
 mkdir -p ./$DEB_PKG_NAME/usr/include/zzfx
 
 # install python scripts
+cp ./python/zzfx_gui_lib.py ./$DEB_PKG_NAME/usr/bin/zzfx_gui_lib.py
 cp ./python/zzfx.py ./$DEB_PKG_NAME/usr/bin/zzfx.py
 cp ./python/zzfx_cli.py ./$DEB_PKG_NAME/usr/bin/zzfx_cli.py
 cp ./python/zzfx_gui.py ./$DEB_PKG_NAME/usr/bin/zzfx_gui.py
@@ -51,7 +52,7 @@ Version: %s
 Section: games
 Priority: optional
 Architecture: amd64
-Depends: python3 (>=3.12.3-0ubuntu2.1), libopenal-dev (>=1.23.1)
+Depends: python3 (>=3.12.3-0ubuntu2.1), libopenal-dev (>=1.23.1), python3-matplotlib (>=3.6.3)
 Maintainer: Jim Marshall <jimmarshall35@gmail.com>
 Description: An unofficial C port of https://github.com/KilledByAPixel/ZzFX
 EOF

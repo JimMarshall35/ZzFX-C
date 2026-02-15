@@ -89,6 +89,11 @@ void zzfx_Update(float deltaT);
 /// @return 
 bool zzfx_IsSoundPlaying();
 
+/// @brief 
+/// @param pOutSize 
+/// @return 
+float* zzfx_GetSfxBuffer(int* pOutSize);
+
 #ifdef __cplusplus
 }
 #endif

@@ -7,8 +7,14 @@
 #################################################
 
 import ctypes
+from platform import system
+onWindows = 'Windows' in system()
+zzfx_so = None
+if onWindows:
+    zzfx_so = ctypes.CDLL("libZzFX_OpenAL.dll")
+else:
+    zzfx_so = ctypes.CDLL("libZzFX_OpenAL.so")
 
-zzfx_so = ctypes.CDLL("libZzFX_OpenAL.so")
 
 zzfx_so.zzfx_InitBackend.argtypes = ()
 zzfx_so.zzfx_InitBackend.restype = None
@@ -53,6 +59,8 @@ zzfx_so.zzfx_GetMasterVolume.restype = ctypes.c_float
 zzfx_so.zzfx_SetMasterVolume.argtypes = [ctypes.c_float]
 zzfx_so.zzfx_SetMasterVolume.restype = None
 
+zzfx_so.zzfx_GetSfxBuffer.argtypes = [ctypes.POINTER(ctypes.c_int)]
+zzfx_so.zzfx_GetSfxBuffer.restype = ctypes.POINTER(ctypes.c_float)
 
 def zzfx_InitBackend():
     zzfx_so.zzfx_InitBackend()
@@ -120,3 +128,11 @@ def zzfx(
         ctypes.c_float(tremolo),
         ctypes.c_float(filter))
     return float(result)
+
+def zzfx_get_buffer_last():
+    out_length = ctypes.c_int(0)
+    arr_ptr = zzfx_so.zzfx_GetSfxBuffer(ctypes.byref(out_length))
+    cpy = []
+    for i in range(out_length.value):
+        cpy.append(arr_ptr[i])
+    return cpy

@@ -50,8 +50,10 @@ static HSFXBuffer gPlayingBuffersListHead = -1;
 static int gPlayingBuffersListLen = 0;
 static OBJECT_POOL(struct SFXBuffer) gBuffersPool = NULL;
 float* gSfxBuffer = NULL;
+size_t gSfxBufferCapacity = 0;
 size_t gSfxBufferSize = 0;
 float gMasterVolume = 0.2;
+
 
 static void InsertBufferIntoPlayingList(HSFXBuffer hBuf)
 {
@@ -138,9 +140,9 @@ static HSFXBuffer AquireSFXBuffer()
 static void AllocateWorkingSampleBuffer()
 {
     const float sfxBufferLenSeconds = 4;
-    gSfxBufferSize = sizeof(float) * sfxBufferLenSeconds * gDevRate;
-    gSfxBuffer = malloc(gSfxBufferSize); 
-    ZeroMemory(gSfxBuffer, gSfxBufferSize);
+    gSfxBufferCapacity = sizeof(float) * sfxBufferLenSeconds * gDevRate;
+    gSfxBuffer = malloc(gSfxBufferCapacity); 
+    ZeroMemory(gSfxBuffer, gSfxBufferCapacity);
 }
 
 float zzfx(
@@ -198,7 +200,7 @@ float zzfx_struct(struct ZZFXSound* pSound)
 {
     float v = pSound->volume;
     pSound->volume *= gMasterVolume;
-    int samples = zzfx_Generate(gSfxBuffer, gSfxBufferSize / sizeof(float), (float)gDevRate, pSound);
+    int samples = zzfx_Generate(gSfxBuffer, gSfxBufferCapacity / sizeof(float), (float)gDevRate, pSound);
     pSound->volume = v;
     HSFXBuffer hBuf = AquireSFXBuffer();
     printf("Acquired buffer %i\n", hBuf);
@@ -219,6 +221,7 @@ float zzfx_struct(struct ZZFXSound* pSound)
     alSourcePlay(gBuffersPool[hBuf].hALSource);
     InsertBufferIntoPlayingList(hBuf);
     float seconds = (float)samples / (float)gDevRate;
+    gSfxBufferSize = samples;
     return seconds;
 }
 
@@ -325,3 +328,8 @@ bool zzfx_IsSoundPlaying()
     return bAnyTimeLeft;
 }
 
+float* zzfx_GetSfxBuffer(int* pOutSize)
+{   
+    *pOutSize = gSfxBufferSize;
+    return gSfxBuffer;
+}
