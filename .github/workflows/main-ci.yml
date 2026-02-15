@@ -20,7 +20,7 @@ jobs:
     - name: Get Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install podman
+        sudo apt-get install podman libopenal-dev
 
     - name: anaylse simd
       run: |
