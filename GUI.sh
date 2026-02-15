@@ -2,4 +2,4 @@
 
 export LD_LIBRARY_PATH="$PWD/build/openal_backend:$LD_LIBRARY_PATH"
 
-./python/zzfx_gui $@
+python3 ./python/zzfx_gui.py $@

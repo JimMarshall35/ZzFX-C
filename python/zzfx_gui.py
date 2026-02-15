@@ -29,6 +29,10 @@ def add_param_row_wave_combi(frame, onRow, paramsObject, paramInfo):
     c['values'] = list(WAVEFORM_NAME_LUT.keys())
     c.grid(column=1, row=onRow)
 
+DECIMALS_DISPLAYED = 3
+
+def uniform(x, y):
+    return round(random.uniform(x,y), DECIMALS_DISPLAYED)
 
 class SynthParams:
     def call_zzfx(self):
@@ -36,48 +40,48 @@ class SynthParams:
         zzfx.zzfx(*call_args)
 
     def random_explosion(self):
-        self.params["frequency"]["var"].set(random.uniform(30, 99))
+        self.params["frequency"]["var"].set(uniform(30, 99))
         keys_list = list(WAVEFORM_NAME_LUT.keys())
-        i = int(random.uniform(0, len(keys_list)))
+        i = int(uniform(0, len(keys_list)))
         self.params["shape"]["var"].set(keys_list[i])
-        self.params["attack"]["var"].set(random.uniform(0.0, 0.1))
-        self.params["decay"]["var"].set(random.uniform(0.05, 0.2))
-        self.params["sustain"]["var"].set(random.uniform(0.0, 0.3))
-        self.params["sustainVolume"]["var"].set(random.uniform(0.3, 0.5))
-        self.params["release"]["var"].set(random.uniform(0.2, 0.6))
+        self.params["attack"]["var"].set(uniform(0.0, 0.1))
+        self.params["decay"]["var"].set(uniform(0.05, 0.2))
+        self.params["sustain"]["var"].set(uniform(0.0, 0.3))
+        self.params["sustainVolume"]["var"].set(uniform(0.3, 0.5))
+        self.params["release"]["var"].set(uniform(0.2, 0.6))
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["slide"]["var"].set(0.0)
         else:
-            self.params["slide"]["var"].set(random.uniform(-9,9))
+            self.params["slide"]["var"].set(uniform(-9,9))
         pass
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["deltaSlide"]["var"].set(0.0)
         else:
-            self.params["deltaSlide"]["var"].set(random.uniform(-9,9))
+            self.params["deltaSlide"]["var"].set(uniform(-9,9))
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["delay"]["var"].set(0.0)
         else:
-            self.params["delay"]["var"].set(random.uniform(0, 0.5))
+            self.params["delay"]["var"].set(uniform(0, 0.5))
 
-        self.params["noise"]["var"].set(random.uniform(0.0, 2.0))
+        self.params["noise"]["var"].set(uniform(0.0, 2.0))
 
-        if random.uniform(0, 1) < 0.8:
+        if uniform(0, 1) < 0.8:
             self.params["modulation"]["var"].set(0.0)
         else:
-            self.params["modulation"]["var"].set(random.uniform(0, 1.0) ** 2 * 99)
+            self.params["modulation"]["var"].set(uniform(0, 1.0) ** 2 * 99)
 
-        self.params["bitCrush"]["var"].set(random.uniform(0.1, 1.0))
+        self.params["bitCrush"]["var"].set(uniform(0.1, 1.0))
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["tremolo"]["var"].set(0.0)
         else:
-            self.params["tremolo"]["var"].set(random.uniform(0,0.5))
+            self.params["tremolo"]["var"].set(uniform(0,0.5))
 
-        if random.uniform(0, 1) < 0.5 or self.params["tremolo"]["var"].get() != 0:
-            self.params["repeatTime"]["var"].set(random.uniform(0.05,0.3))
+        if uniform(0, 1) < 0.5 or self.params["tremolo"]["var"].get() != 0:
+            self.params["repeatTime"]["var"].set(uniform(0.05,0.3))
 
         filter = 0
         if random.random() < 0.5:
@@ -88,109 +92,110 @@ class SynthParams:
             else:
                 filter = random.random() ** 2 * 2e3 - 3500
 
-        self.params["filter"]["var"].set(filter)
+        self.params["filter"]["var"].set(round(filter, DECIMALS_DISPLAYED))
 
     def random_powerup(self):
-        self.params["frequency"]["var"].set(random.uniform(99, 700))
-        if random.uniform(0,1) < 0.2 :
+        self.params["frequency"]["var"].set(uniform(99, 700))
+        if uniform(0,1) < 0.2 :
             self.params["shape"]["var"].set("square")
         else:
-            if random.uniform(0,1) < 0.5:
+            if uniform(0,1) < 0.5:
                 self.params["shape"]["var"].set("sine")
             else:
                 self.params["shape"]["var"].set("triangle")
-        self.params["attack"]["var"].set(random.uniform(0.0, 0.1))
-        self.params["decay"]["var"].set(random.uniform(0.1, 0.3))
-        self.params["sustain"]["var"].set(random.uniform(0.1, 0.3))
-        self.params["sustainVolume"]["var"].set(random.uniform(0.5, 1.0))
-        self.params["release"]["var"].set(random.uniform(0.05, 0.4))
-        if random.uniform(0, 1) < 0.8:
+        self.params["attack"]["var"].set(uniform(0.0, 0.1))
+        self.params["decay"]["var"].set(uniform(0.1, 0.3))
+        self.params["sustain"]["var"].set(uniform(0.1, 0.3))
+        self.params["sustainVolume"]["var"].set(uniform(0.5, 1.0))
+        self.params["release"]["var"].set(uniform(0.05, 0.4))
+        if uniform(0, 1) < 0.8:
             self.params["delay"]["var"].set(0)
         else:
             self.params["delay"]["var"].set(0.2)
-        self.params["repeatTime"]["var"].set(random.uniform(0.02, 0.2))
-        if random.uniform(0, 1) < 0.5:
+        self.params["repeatTime"]["var"].set(uniform(0.02, 0.2))
+        if uniform(0, 1) < 0.5:
             self.params["slide"]["var"].set(0.0)
         else:
-            self.params["slide"]["var"].set(random.uniform(-1,1)**3*20)
+            self.params["slide"]["var"].set(uniform(-1,1)**3*20)
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["deltaSlide"]["var"].set(0.0)
         else:
-            self.params["deltaSlide"]["var"].set(random.uniform(-1,1)**3*400)
+            self.params["deltaSlide"]["var"].set(uniform(-1,1)**3*400)
 
-        if random.uniform(0, 1) < 0.8:
+        if uniform(0, 1) < 0.8:
             self.params["noise"]["var"].set(0.0)
         else:
-            self.params["noise"]["var"].set(random.uniform(0, 0.5))
+            self.params["noise"]["var"].set(uniform(0, 0.5))
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["bitCrush"]["var"].set(0.0)
         else:
-            self.params["bitCrush"]["var"].set(random.uniform(0, 0.2))
+            self.params["bitCrush"]["var"].set(uniform(0, 0.2))
         
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["tremolo"]["var"].set(0.0)
         else:
-            self.params["tremolo"]["var"].set(random.uniform(0, 0.5))
+            self.params["tremolo"]["var"].set(uniform(0, 0.5))
 
-        if random.uniform(0, 1) < 0.8:
+        if uniform(0, 1) < 0.8:
             self.params["modulation"]["var"].set(0.0)
         else:
-            self.params["modulation"]["var"].set(random.uniform(0, 1.0) ** 2 * 50)
+            self.params["modulation"]["var"].set(uniform(0, 1.0) ** 2 * 50)
 
-        if random.uniform(0, 1) < .5 or (self.params["tremolo"]["var"].get() != 0) and (self.params["slide"]["var"].get() != 0) and (self.params["deltaSlide"]["var"].get() != 0):
-            if random.uniform(0, 1) < 0.5:
-                self.params["pitchJump"]["var"].set(-random.uniform(50, 200))
+        if uniform(0, 1) < .5 or (self.params["tremolo"]["var"].get() != 0) and (self.params["slide"]["var"].get() != 0) and (self.params["deltaSlide"]["var"].get() != 0):
+            if uniform(0, 1) < 0.5:
+                self.params["pitchJump"]["var"].set(-uniform(50, 200))
             else:
-                self.params["pitchJump"]["var"].set(random.uniform(50, 500))
+                self.params["pitchJump"]["var"].set(uniform(50, 500))
             if self.params["pitchJump"] == 0:
                 self.params["pitchJumpTime"]["var"].set(0)
             else:
-                self.params["pitchJumpTime"]["var"].set(random.uniform(0.05, 0.2))
+                self.params["pitchJumpTime"]["var"].set(uniform(0.05, 0.2))
     
     def random_hit(self):
-        self.params["frequency"]["var"].set(random.uniform(30, 500))
+        
+        self.params["frequency"]["var"].set(uniform(30, 500))
         keys_list = list(WAVEFORM_NAME_LUT.keys())
-        i = int(random.uniform(0, len(keys_list)))
+        i = int(uniform(0, len(keys_list)))
         self.params["shape"]["var"].set(keys_list[i])
-        self.params["attack"]["var"].set(random.uniform(0.0, 0.03))
-        self.params["decay"]["var"].set(random.uniform(0.0, 0.1))
-        self.params["sustain"]["var"].set(random.uniform(0.0, 0.1))
-        self.params["sustainVolume"]["var"].set(random.uniform(0.4, 1.0))
-        self.params["release"]["var"].set(random.uniform(0.0, 0.2))
+        self.params["attack"]["var"].set(uniform(0.0, 0.03))
+        self.params["decay"]["var"].set(uniform(0.0, 0.1))
+        self.params["sustain"]["var"].set(uniform(0.0, 0.1))
+        self.params["sustainVolume"]["var"].set(uniform(0.4, 1.0))
+        self.params["release"]["var"].set(uniform(0.0, 0.2))
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["delay"]["var"].set(0.0)
         else:
-            self.params["delay"]["var"].set(random.uniform(0, 0.2))
+            self.params["delay"]["var"].set(uniform(0, 0.2))
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["slide"]["var"].set(0.0)
         else:
-            self.params["slide"]["var"].set(random.uniform(-1,1) ** 3 * 10)
+            self.params["slide"]["var"].set(uniform(-1,1) ** 3 * 10)
 
-        if random.uniform(0, 1) < 0.5:
+        if uniform(0, 1) < 0.5:
             self.params["deltaSlide"]["var"].set(0.0)
         else:
-            self.params["deltaSlide"]["var"].set(random.uniform(-1,1) ** 3 * 20)
+            self.params["deltaSlide"]["var"].set(uniform(-1,1) ** 3 * 20)
 
-        self.params["noise"]["var"].set(random.uniform(0.0, 2.0))
+        self.params["noise"]["var"].set(uniform(0.0, 2.0))
 
-        if random.uniform(0, 1) < 0.8:
+        if uniform(0, 1) < 0.8:
             self.params["modulation"]["var"].set(0.0)
         else:
-            self.params["modulation"]["var"].set(random.random() ** 2 * 50)
+            self.params["modulation"]["var"].set(round(random.random() ** 2 * 50, DECIMALS_DISPLAYED))
 
-        self.params["bitCrush"]["var"].set(random.uniform(0.0, 0.5))
+        self.params["bitCrush"]["var"].set(uniform(0.0, 0.5))
 
-        if random.uniform(0, 1) < 0.6:
+        if uniform(0, 1) < 0.6:
             self.params["tremolo"]["var"].set(0.0)
         else:
-            self.params["tremolo"]["var"].set(random.uniform(0,0.5))
+            self.params["tremolo"]["var"].set(uniform(0,0.5))
 
-        if random.uniform(0, 1.0) < 0.5 or self.params["tremolo"]["var"].get() != 0:
-            self.params["repeatTime"]["var"].set(random.uniform(0.01,0.1))
+        if uniform(0, 1.0) < 0.5 or self.params["tremolo"]["var"].get() != 0:
+            self.params["repeatTime"]["var"].set(uniform(0.01,0.1))
 
         filter = 0
         if random.random() < 0.5:
@@ -201,7 +206,7 @@ class SynthParams:
             else:
                 filter = random.random() ** 2 * 2e3 - 3500
 
-        self.params["filter"]["var"].set(filter)
+        self.params["filter"]["var"].set(round(filter, DECIMALS_DISPLAYED))
             
     def set_default_values(self, params):
         for p in params:
@@ -247,7 +252,39 @@ class SynthParams:
                 self.params["tremolo"]["var"].set(0)
             elif p == "filter":
                 self.params["filter"]["var"].set(0)
-                
+    
+    def set_command_string_var(self):
+        s = "{"
+        s += f"{self.params['volume']["var"].get()},"
+        s += f"{self.params['randomness']["var"].get()},"
+        s += f"{self.params['frequency']["var"].get()},"
+        s += f"{self.params['attack']["var"].get()},"
+        s += f"{self.params['sustain']["var"].get()},"
+        s += f"{self.params['release']["var"].get()},"
+        s += f"{WAVEFORM_NAME_LUT[self.params['shape']["var"].get()]},"
+        s += f"{self.params['shapeCurve']["var"].get()},"
+        s += f"{self.params['slide']["var"].get()},"
+        s += f"{self.params['deltaSlide']["var"].get()},"
+        s += f"{self.params['pitchJump']["var"].get()},"
+        s += f"{self.params['pitchJumpTime']["var"].get()},"
+        s += f"{self.params['repeatTime']["var"].get()},"
+        s += f"{self.params['noise']["var"].get()},"
+        s += f"{self.params['modulation']["var"].get()},"
+        s += f"{self.params['bitCrush']["var"].get()},"
+        s += f"{self.params['delay']["var"].get()},"
+        s += f"{self.params['sustainVolume']["var"].get()},"
+        s += f"{self.params['decay']["var"].get()},"
+        s += f"{self.params['tremolo']["var"].get()},"
+        s += f"{self.params['filter']["var"].get()}"
+        s += "}"
+        self.command_string.set(s)
+
+    def on_param_changed(self):
+        self.set_command_string_var()
+
+    def get_command_string_var(self):
+        return self.command_string
+    
     def __init__(self):
         self.params = {
             "volume" : { 
@@ -482,7 +519,13 @@ class SynthParams:
                 "decay",
                 "tremolo",
                 "filter"]
+        for k in self.params.keys():
+            p = self.params[k]
+            p["var"].trace_add("write", lambda var, index, mode: self.on_param_changed())
+                
+        self.command_string = tk.StringVar()
         self.set_default_values(self.params.keys())
+        self.set_command_string_var()
 
 root = None
 
@@ -524,6 +567,10 @@ def add_right_pane(frame):
     explosion_bt = tk.Button(frame, text="Hit", command=explosion)
     explosion_bt.grid(column=2, row=1)
 
+def add_bottom_pane(frame, params):
+    text_cmd = tk.Entry(frame, textvariable=params.get_command_string_var(), width=150)
+    text_cmd.grid(column=0, row=0)
+
 def main():
     global root, params
     zzfx.zzfx_InitBackend()
@@ -542,6 +589,10 @@ def main():
     right_hand_pane = tk.Frame(root)
     right_hand_pane.grid(row=0, column=1)
     add_right_pane(right_hand_pane)
+
+    bottom_pane = tk.Frame(root)
+    bottom_pane.grid(row=1, column=0, columnspan=2)
+    add_bottom_pane(bottom_pane, params)
 
     root.mainloop()
     zzfx.zzfx_ShutdownBackend()
