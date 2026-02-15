@@ -8,7 +8,7 @@
 
 import ctypes
 
-zzfx_so = ctypes.CDLL('libZzFX_OpenAL.so')
+zzfx_so = ctypes.CDLL("libZzFX_OpenAL.so")
 
 zzfx_so.zzfx_InitBackend.argtypes = ()
 zzfx_so.zzfx_InitBackend.restype = None

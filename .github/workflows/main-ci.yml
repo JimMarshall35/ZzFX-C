@@ -31,28 +31,21 @@ jobs:
           --list-info \
           --list-cpuid
 
+    - name: Version
+      run: |
+        python3 ./version.py
+
     - name: Build
       run: |
-        mkdir ./build
-        cd build
-        cmake ..
-        make
+        # build
+        ./Build.sh
         # package
-        cd ..
-        mkdir -p ./pkg/usr/bin
-        mkdir -p ./pkg/usr/lib
-        mkdir -p ./pkg/usr/include/zzfx
-        cp ./python/zzfx.py ./pkg/usr/bin/zzfx.py
-        cp ./python/zzfx.py ./pkg/usr/bin/zzfx_cli
-        cp ./python/zzfx.py ./pkg/usr/bin/zzfx_gui
-        chmod +x ./pkg/usr/bin/zzfx_cli
-        chmod +x ./pkg/usr/bin/zzfx_gui
-        cp ./build/core/libZzFX.a ./pkg/usr/lib/libZzFX.a
-        cp ./build/openal_backend/libZzFX_OpenAL.so ./pkg/usr/lib/libZzFX_OpenAL.so
-        cp -r ./core/include/*.h ./pkg/usr/include/zzfx
-
+        ./BuildDebianPkg.sh
+        export FS="$(cat foldername.txt)"
     - uses: actions/upload-artifact@v4
       with:
         name: my-artifact
-        path: ./pkg # or path/to/artifact
+        path: |
+          ./${{ env.FS }}
+          ./*.deb
 

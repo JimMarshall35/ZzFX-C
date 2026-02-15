@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import argparse
 from zzfx import *
 from time import sleep
