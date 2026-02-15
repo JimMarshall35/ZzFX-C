@@ -64,7 +64,7 @@ echo "$fixed"
 echo "$fixed" > ./$DEB_PKG_NAME/DEBIAN/control
 
 # output name of debian folder for later jobs to read
-echo "./$DEB_PKG_NAME" > foldername.txt
+#echo "./$DEB_PKG_NAME" > foldername.txt
 
 # build debian
 dpkg-deb --build "./$DEB_PKG_NAME"
