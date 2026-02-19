@@ -436,22 +436,23 @@ int zzfx_Generate_avx(float* buffer, int bufferSize, float sampleRate, struct ZZ
             */
            if(delay > 0)
            {
-                __m256 _delay = _mm256_set1_ps(delay);
-                __m256i _delayInt = _mm256_cvtps_epi32(_delay);
-                __m256 _dIndex = _mm256_sub_ps(_i, _delay);
-                __m256 _0 = _mm256_setzero_ps();
-                __m256 _2 = _mm256_set1_ps(2.0f);
-                __m256 _ltZeroMask = _mm256_cmp_ps(_dIndex, _0, _CMP_LT_OS);
-                __m256 _geZeroMask = _mm256_cmp_ps(_dIndex, _0, _CMP_GE_OS);                          /* mask of all the packed singles >= 0 */
-                __m256 _delaySamples = _mm256_mask_i32gather_ps(_0, buffer, _dIndex, _geZeroMask, 4); /* load from the buffer packed singles at indexes from _dIndex */
+                /* TEMPORARILY COMMENTED OUT: _mm256_mask_i32gather_ps throws error on game CI, param 3 should be __m256i  */
+                // __m256 _delay = _mm256_set1_ps(delay);
+                // __m256i _delayInt = _mm256_cvtps_epi32(_delay);
+                // __m256 _dIndex = _mm256_sub_ps(_i, _delay);
+                // __m256 _0 = _mm256_setzero_ps();
+                // __m256 _2 = _mm256_set1_ps(2.0f);
+                // __m256 _ltZeroMask = _mm256_cmp_ps(_dIndex, _0, _CMP_LT_OS);
+                // __m256 _geZeroMask = _mm256_cmp_ps(_dIndex, _0, _CMP_GE_OS);                          /* mask of all the packed singles >= 0 */
+                // __m256 _delaySamples = _mm256_mask_i32gather_ps(_0, buffer, _dIndex, _geZeroMask, 4); /* load from the buffer packed singles at indexes from _dIndex */
                 
-                __m256 _sOver2 = _mm256_div_ps(_samples, _2);
-                __m256 _delaySampleOver2 = _mm256_div_ps(_delaySamples, _2);
+                // __m256 _sOver2 = _mm256_div_ps(_samples, _2);
+                // __m256 _delaySampleOver2 = _mm256_div_ps(_delaySamples, _2);
 
-                __m256 _validIndexVal = _mm256_add_ps(_sOver2, _delaySampleOver2);
-                __m256 _validPortion = _mm256_and_ps(_geZeroMask, _validIndexVal);
-                __m256 _invalidPortion = _mm256_and_ps(_ltZeroMask, _sOver2);
-                _samples = _mm256_or_ps(_validPortion, _invalidPortion);
+                // __m256 _validIndexVal = _mm256_add_ps(_sOver2, _delaySampleOver2);
+                // __m256 _validPortion = _mm256_and_ps(_geZeroMask, _validIndexVal);
+                // __m256 _invalidPortion = _mm256_and_ps(_ltZeroMask, _sOver2);
+                // _samples = _mm256_or_ps(_validPortion, _invalidPortion);
             }
         }
 
